@@ -66,6 +66,8 @@ No API key is included. Task 5 must be written independently by the student unde
 
 ## Map interface
 
-The dashboard uses Leaflet 1.9.4 and OpenStreetMap tiles, with attribution on the map. Markers use OPW station locations and show the calculated town recommendation. Town details remain available through the list when the map library is unavailable. Counts and map colours reset while a new question reads sources. No inundation extent is calculated.
+The dashboard serves Leaflet 1.9.4 from vendor/leaflet and uses OpenStreetMap tiles, with attribution on the map. Markers use OPW station locations and show the calculated town recommendation. Town details remain available through the list when the map library is unavailable. Counts and map colours reset while a new question reads sources. No inundation extent is calculated.
 
 Run `node test_dashboard.mjs` for the DOM contract and stale-data reset checks. This is not a real-browser visual test.
+
+The page automatically retrieves its initial plan without sending an LLM request. Startup errors appear above the overview. Run `node test_startup.mjs` for a complete application startup test against live sources with a lightweight DOM harness; real-browser verification remains separate.
