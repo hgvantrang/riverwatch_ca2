@@ -1,7 +1,8 @@
-﻿const element = id => document.getElementById(id);
+const element = id => document.getElementById(id);
 const colors = {Normal:'#29977c', Standby:'#d69a27', Barriers:'#c45353'};
 let history = [];
 let rows = [];
+let forecastSources = [];
 let selected = 'Clonmel';
 let map;
 const markers = new Map();
@@ -29,9 +30,34 @@ function showTown(name) {
         metrics.append(item);
     }
     detail.append(metrics);
+    const forecast = forecastSources.find(source => source.town === name);
+    if (forecast) {
+        const chart = node('div', '', 'forecast-chart');
+        chart.append(node('h4', 'Three-day river forecast'));
+        const columns = node('div', '', 'forecast-columns');
+        const ceiling = Math.max(town.p99, ...forecast.values, 1);
+        forecast.values.forEach((value, index) => {
+            const column = node('div', '', 'forecast-column');
+            const track = node('div', '', 'forecast-track');
+            const bar = node('div', '', 'forecast-bar');
+            bar.style.height = `${Math.max(3, value / ceiling * 100)}%`;
+            bar.style.background = value >= town.p99 ? colors.Barriers : value >= town.p95 ? colors.Standby : colors.Normal;
+            track.append(bar);
+            column.append(node('strong', value.toFixed(2)), track, node('span', forecast.dates[index].slice(5)));
+            columns.append(column);
+        });
+        chart.append(columns, node('p', 'Daily model flow · m³/s · dates MM-DD'));
+        detail.append(chart);
+    }
     if (live) {
         detail.append(node('p', live.crew ? `${live.crew} crew · barriers before 18:00` : live.escalate ? 'Escalate to Area Manager. Apply every Standby measure.' : live.level === 'Standby' ? 'Confirm staff, check pumps and stage sandbags.' : 'Routine monitoring.'));
-        detail.append(node('p', `${live.pumps} pumps · ${live.sandbags} sandbags · ${live.staff_on_call} staff on call`));
+        const resources = node('div', '', 'resources');
+        for (const [label, value] of [['Pumps', live.pumps], ['Sandbags', live.sandbags], ['On call', live.staff_on_call]]) {
+            const resource = node('div', '');
+            resource.append(node('strong', String(value)), node('span', label));
+            resources.append(resource);
+        }
+        detail.append(resources);
         detail.append(node('p', live.notes));
     } else {
         detail.append(node('p', 'Refresh the plan for the current forecast and team resources.'));
@@ -61,9 +87,9 @@ export function initialiseDashboard(data) {
         for (const town of data) {
             const coordinates = town.opw_station.geometry.coordinates;
             const marker = L.circleMarker([coordinates[1],coordinates[0]], {
-                radius:9, color:'#fff', weight:3, fillColor:'#71858b', fillOpacity:1
+                radius:10, color:'#fff', weight:3, fillColor:'#71858b', fillOpacity:1
             }).addTo(map);
-            marker.bindTooltip(node('span', town.town), {direction:'top'});
+            marker.bindTooltip(node('span', town.town), {direction:'top',permanent:true,offset:[0,-9]});
             marker.on('click', () => showTown(town.town));
             markers.set(town.town, marker);
         }
@@ -95,6 +121,7 @@ export function initialiseDashboard(data) {
 
 export function resetDashboard() {
     rows = [];
+    forecastSources = [];
     for (const level of ['normal','standby','barriers']) element(`count-${level}`).textContent = '—';
     for (const marker of markers.values()) marker.setStyle({fillColor:'#71858b'});
     element('crew-list').replaceChildren(node('p','Awaiting a complete live-data result.'));
@@ -108,8 +135,9 @@ export function setBusy(busy) {
     element('ask').textContent = busy ? 'Reading sources…' : 'Ask River Watch ↗';
 }
 
-export function renderDashboard(result, retrieved) {
+export function renderDashboard(result, retrieved, sources = []) {
     rows = result;
+    forecastSources = sources;
     for (const level of ['Normal','Standby','Barriers']) {
         element(`count-${level.toLowerCase()}`).textContent = result.filter(row => row.level === level).length;
     }

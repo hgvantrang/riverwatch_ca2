@@ -1,4 +1,4 @@
-import {initialiseDashboard, renderDashboard, resetDashboard, setBusy} from './dashboard.mjs?v=20261124b';
+import {initialiseDashboard, renderDashboard, resetDashboard, setBusy} from './dashboard.mjs?v=20261124d';
 import {studyAnswer} from './answers.mjs';
 import {defaultSheetUrl, sheetCsvUrl} from './settings.mjs';
 import {csv,plan,normaliseWarnings} from './engine.mjs';
@@ -33,7 +33,7 @@ $('ask').onclick=async(event)=>{
   const scenario=/clonmel/i.test(question)&&/\b150\b/.test(question)&&/what if|reaches|scenario/i.test(question);if(scenario)rows.find(r=>r.town==='Clonmel').flow_override_m3s='150';
   const result=plan(rows,history,peaks,warnings);const ranked=[...history].sort((a,b)=>b.total_events-a.total_events);const evidence={retrieved:new Date().toISOString(),sheet,warningSource:'https://www.met.ie/Open_Data/json/warning_IRELAND.json',riverValidation:'PENDING. All recommendations are provisional.',plan:result,studyCandidates:ranked.map(h=>({town:h.town,events:h.total_events,firstFour:h.first_four,lastFour:h.last_four})),forecastSources:sources};
   $('evidence').textContent=JSON.stringify(evidence,null,2);
-  renderDashboard(result,evidence.retrieved);
+  renderDashboard(result,evidence.retrieved,sources);
   $('answer').textContent='PROVISIONAL — named river verification pending.\n\n'+result.map(r=>`${r.town}: ${r.level}. Peak ${r.peak} m³/s; P95 ${r.p95.toFixed(3)}, P99 ${r.p99.toFixed(3)}. ${r.raised?'Rain raises level. ':''}${r.rehearsal?'REHEARSAL. ':''}${r.crew?'Crew '+r.crew+' erects barriers before 18:00.':r.level==='Normal'?'Routine monitoring.':'Confirm staff, check pumps, stage sandbags.'}${r.escalate?' Escalate to Area Manager: barriers unavailable or no crew.':''}`).join('\n\n');
   if (/study|defence|manager|priority|first in line/i.test(question)) $('answer').textContent=studyAnswer(history);
   const key=event?.type==='initial' ? '' : ($('key').value.trim()||sessionStorage.getItem('riverwatch-key'));
