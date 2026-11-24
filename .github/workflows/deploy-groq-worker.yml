@@ -6,7 +6,6 @@ on:
     paths:
       - "groq-worker.mjs"
       - "wrangler.toml"
-      - ".github/workflows/deploy-groq-worker.yml"
   workflow_dispatch:
 
 permissions:
