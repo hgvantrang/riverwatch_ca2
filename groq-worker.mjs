@@ -15,8 +15,10 @@ export default {
     if (request.method !== 'POST') return Response.json({ error: 'POST required.' }, { status: 405, headers: corsHeaders });
     if (!env.GROQ_API_KEY) return Response.json({ error: 'Groq service is not configured.' }, { status: 503, headers: corsHeaders });
     try {
+      const contentLength = Number(request.headers.get('Content-Length') || 0);
+      if (contentLength > 32000) return Response.json({ error: 'Request is too large.' }, { status: 413, headers: corsHeaders });
       const { question, evidence } = await request.json();
-      if (typeof question !== 'string' || question.length > 1200 || !evidence || typeof evidence !== 'object') {
+      if (typeof question !== 'string' || question.length > 1200 || !evidence || typeof evidence !== 'object' || JSON.stringify(evidence).length > 24000) {
         return Response.json({ error: 'Invalid question or evidence.' }, { status: 400, headers: corsHeaders });
       }
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
