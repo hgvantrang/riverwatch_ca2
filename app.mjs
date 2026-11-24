@@ -1,6 +1,6 @@
-import {initialiseDashboard, renderDashboard, resetDashboard, setBusy} from './dashboard.mjs?v=20261124d';
+import {initialiseDashboard, renderDashboard, resetDashboard, setBusy} from './dashboard.mjs?v=20261124f';
 import {studyAnswer} from './answers.mjs';
-import {defaultSheetUrl, sheetCsvUrl, groqWorkerUrl} from './settings.mjs';
+import {defaultSheetUrl, sheetCsvUrl, groqWorkerUrl} from './settings.mjs?v=20261124f';
 import {csv,plan,normaliseWarnings} from './engine.mjs';
 const $=id=>document.getElementById(id);
 let history;
@@ -17,7 +17,7 @@ try {
 }
 $('sheet').value=localStorage.getItem('riverwatch-sheet')||defaultSheetUrl;
 $('save').onclick=()=>{localStorage.setItem('riverwatch-sheet',$('sheet').value.trim());$('status').textContent='Data source saved.';};
-async function json(url){const r=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(30000)});if(!r.ok)throw Error('HTTP '+r.status+' from '+new URL(url,location).hostname);return r.json();}
+async function json(url){let r;try{r=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(30000)});}catch{throw Error('Cannot reach the Cloudflare data service. Deploy groq-worker.mjs and check groqWorkerUrl in settings.mjs.');}if(!r.ok)throw Error('HTTP '+r.status+' from '+new URL(url,location).hostname);return r.json();}
 $('ask').onclick=async(event)=>{
  $('ask').disabled=true;setBusy(true);resetDashboard();$('answer').textContent='';$('evidence').textContent='';
  try{
@@ -25,10 +25,10 @@ $('ask').onclick=async(event)=>{
   if(/\b(house|home|insurance|coastal|tidal|road closure)\b/i.test(question)){$('answer').textContent='This tool cannot assess individual homes, coastal or tidal flooding, road closures or insurance. Contact the council area office.';return;}
   const sheet=sheetCsvUrl($('sheet').value.trim());if(!/^https:\/\/docs.google.com\/spreadsheets\//.test(sheet))throw Error('Set a published Google Sheet CSV URL.');
   $('status').textContent='Reading Sheet, river forecasts and official warnings…';
-  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Dublin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());const end=new Date(today+'T12:00:00Z');end.setUTCDate(end.getUTCDate()+2);
+  const dateParts=Object.fromEntries(new Intl.DateTimeFormat('en-IE',{timeZone:'Europe/Dublin',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(p=>[p.type,p.value]));const today=`${dateParts.year}-${dateParts.month}-${dateParts.day}`;const end=new Date(today+'T12:00:00Z');end.setUTCDate(end.getUTCDate()+2);
   const sheetResponse=await fetch(sheet,{cache:'no-store',signal:AbortSignal.timeout(30000)});if(!sheetResponse.ok)throw Error('Sheet HTTP '+sheetResponse.status);const rows=csv(await sheetResponse.text());if(rows.length!==8||new Set(rows.map(r=>r.town)).size!==8)throw Error('Sheet must contain all eight distinct towns.');
-  const warnings=normaliseWarnings(await json('https://www.met.ie/Open_Data/json/warning_IRELAND.json'));
-  const peaks={},sources=[];await Promise.all(history.map(async h=>{const url=new URL('https://flood-api.open-meteo.com/v1/flood');url.search=new URLSearchParams({latitude:h.latitude,longitude:h.longitude,daily:'river_discharge',start_date:today,end_date:end.toISOString().slice(0,10)});const data=await json(url);const values=data.daily.river_discharge;if(values.length!==3||values.some(v=>!Number.isFinite(v)))throw Error('Incomplete forecast '+h.town);peaks[h.town]=Math.max(...values);sources.push({town:h.town,url:String(url),dates:data.daily.time,values,grid:[data.latitude,data.longitude]});}));
+  const warnings=normaliseWarnings(await json(`${groqWorkerUrl}/api/warnings`));
+  const peaks={},sources=[];await Promise.all(history.map(async h=>{const url=new URL('https://flood-api.open-meteo.com/v1/flood');url.search=new URLSearchParams({latitude:h.latitude,longitude:h.longitude,daily:'river_discharge',start_date:today,end_date:end.toISOString().slice(0,10)});const proxy=new URL('/api/flood'+url.search,groqWorkerUrl);const data=await json(proxy);const values=data.daily.river_discharge;if(values.length!==3||values.some(v=>!Number.isFinite(v)))throw Error('Incomplete forecast '+h.town);peaks[h.town]=Math.max(...values);sources.push({town:h.town,url:String(url),dates:data.daily.time,values,grid:[data.latitude,data.longitude]});}));
   const scenario=/clonmel/i.test(question)&&/\b150\b/.test(question)&&/what if|reaches|scenario/i.test(question);if(scenario)rows.find(r=>r.town==='Clonmel').flow_override_m3s='150';
   const result=plan(rows,history,peaks,warnings);const ranked=[...history].sort((a,b)=>b.total_events-a.total_events);const evidence={retrieved:new Date().toISOString(),sheet,warningSource:'https://www.met.ie/Open_Data/json/warning_IRELAND.json',riverValidation:'PENDING. All recommendations are provisional.',plan:result,studyCandidates:ranked.map(h=>({town:h.town,events:h.total_events,firstFour:h.first_four,lastFour:h.last_four})),forecastSources:sources};
   $('evidence').textContent=JSON.stringify(evidence,null,2);
