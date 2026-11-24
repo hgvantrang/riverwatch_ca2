@@ -36,3 +36,20 @@ assert.match(elements.get('status').textContent,/AI explanation unavailable/);
 assert.equal(JSON.parse(elements.get('evidence').textContent).plan.length,8);
 assert(elements.get('answer').textContent.includes('Clonmel'));
 console.log('PASS AI failure preserves the calculated plan and evidence.');
+const previousFetch=globalThis.fetch;
+globalThis.fetch=async(url,options)=>{
+ if (String(url).includes('workers.dev') && options?.method==='POST') {
+  assert.equal(new URL(url).pathname,'/api/ask');
+  assert.equal(JSON.parse(options.body).question,'Why is Fermoy at that level?');
+  assert.equal(elements.get('answer').textContent,'Answering your question…');
+  return Response.json({answer:'Fermoy is Normal because its forecast is below P95.'});
+ }
+ return previousFetch(url,options);
+};
+elements.get('question').value='Why is Fermoy at that level?';
+await elements.get('ask').click();
+assert.equal(elements.get('answer').textContent,'Fermoy is Normal because its forecast is below P95.');
+assert.match(elements.get('status').textContent,/Question answered/);
+assert.equal(JSON.parse(elements.get('evidence').textContent).plan.length,8);
+assert.equal(elements.get('ask').disabled,false);
+console.log('PASS a new question displays its specific AI answer instead of the default plan.');

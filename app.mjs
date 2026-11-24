@@ -37,8 +37,12 @@ $('ask').onclick=async(event)=>{
   if (/study|defence|manager|priority|first in line/i.test(question)) $('answer').textContent=studyAnswer(history);
   $('status').textContent='Live retrieval complete. River validation is pending.';
   if (groqWorkerUrl && event?.type !== 'initial') {
+    const calculatedAnswer = $('answer').textContent;
+    $('answer').textContent = 'Answering your question…';
+    $('status').textContent = 'Sources loaded. River Watch AI is answering your question…';
+    $('ask').textContent = 'Answering…';
     try {
-      const response = await fetch(groqWorkerUrl, {
+      const response = await fetch(new URL('/api/ask', groqWorkerUrl), {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         signal: AbortSignal.timeout(30000),
@@ -47,10 +51,11 @@ $('ask').onclick=async(event)=>{
       if (!response.ok) throw Error('HTTP ' + response.status);
       const data = await response.json();
       if (typeof data.answer !== 'string' || !data.answer.trim()) throw Error('Empty AI response');
-      $('answer').textContent += '\n\nRiver Watch AI\n' + data.answer;
-      $('status').textContent += ' Groq explanation added.';
+      $('answer').textContent = data.answer;
+      $('status').textContent = 'Question answered using the retrieved data. Recommendations remain provisional.';
     } catch (error) {
-      $('status').textContent += ' AI explanation unavailable (' + error.message + '). Calculated plan and source evidence are available.';
+      $('answer').textContent = 'AI could not answer this question (' + error.message + '). The calculated response plan is shown below. Please try again.\n\n' + calculatedAnswer;
+      $('status').textContent = 'AI explanation unavailable (' + error.message + '). Calculated plan and source evidence are available.';
     }
   }
  }catch(e){$('status').textContent='Unable to complete question: '+e.message;}finally{$('ask').disabled=false;setBusy(false);}
