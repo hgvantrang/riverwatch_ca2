@@ -2,12 +2,12 @@
 
 Live site: https://hgvantrang.github.io/riverwatch_ca2/
 
-River Watch reads a Google Sheet, daily Open-Meteo/GloFAS river forecasts and official Met Eireann warnings for eight Irish towns. Code calculates thresholds and crew assignments. An optional OpenAI connection explains the results. The Duty Officer makes the final decision.
+River Watch reads a Google Sheet, daily Open-Meteo/GloFAS river forecasts and official Met Eireann warnings for eight Irish towns. Code calculates thresholds and crew assignments. An optional Groq assistant explains the results. The Duty Officer makes the final decision.
 
 ## Use the site
 
 1. Open the live site. The supplied Google Sheet is configured by default.
-2. Enter an OpenAI API key in the page settings to enable AI explanations. Saving retains it only for the current browser tab session. Use Forget key to remove it.
+2. The Groq assistant uses a server-side Cloudflare Worker. Visitors do not enter an API key.
 3. Ask for tonight's plan, an explanation for Fermoy, the Clonmel 150 m3/s scenario, or the flood-defence study priority.
 4. Expand the evidence section to inspect source URLs, dates, numbers and allocations.
 
@@ -69,5 +69,7 @@ No API key is included. Task 5 must be written independently by the student unde
 The dashboard serves Leaflet 1.9.4 from vendor/leaflet and uses OpenStreetMap tiles, with attribution on the map. Markers use OPW station locations and show the calculated town recommendation. Town details remain available through the list when the map library is unavailable. Counts and map colours reset while a new question reads sources. No inundation extent is calculated.
 
 Run `node test_dashboard.mjs` for the DOM contract and stale-data reset checks. This is not a real-browser visual test.
+
+The page automatically retrieves its initial plan without sending an LLM request. Startup errors appear above the overview. The site is static GitHub Pages, so it cannot safely store a provider key. Deploy `groq-worker.mjs` as a Cloudflare Worker, set its `GROQ_API_KEY` secret with `npx wrangler secret put GROQ_API_KEY`, and set `ALLOWED_ORIGIN` to the deployed GitHub Pages origin (for example `https://hgvantrang.github.io`). Set `groqWorkerUrl` in `settings.mjs` to the Worker URL, then publish the site. Keep the key out of this repository and browser code. The Worker uses Groq's OpenAI-compatible chat completions API and defaults to `llama-3.3-70b-versatile`.
 
 The page automatically retrieves its initial plan without sending an LLM request. Startup errors appear above the overview. Run `node test_startup.mjs` for a complete application startup test against live sources with a lightweight DOM harness; real-browser verification remains separate.
