@@ -1,0 +1,13 @@
+﻿import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {plan} from './engine.mjs';
+import {studyAnswer} from './answers.mjs';
+const read=name=>JSON.parse(fs.readFileSync(new URL(name,import.meta.url),'utf8'));
+const live=read('./live_verification.json');
+const history=read('./history_summary.json');
+const peaks=Object.fromEntries(live.forecasts.map(row=>[row.town,Math.max(...row.response.daily.river_discharge)]));
+assert.deepEqual(plan(live.rows,history,peaks,[],new Date(live.retrieved)).map(r=>r.level),live.baseline.map(r=>r.level));
+assert.deepEqual(plan(live.rehearsal_rows,history,peaks,[],new Date(live.retrieved)).map(r=>r.level),live.rehearsal.map(r=>r.level));
+assert(studyAnswer(history).includes('Ennis: 17'));
+assert(studyAnswer(history).includes('First four winters 7; last four 9'));
+console.log('PASS JavaScript and Python live results and study answer.');

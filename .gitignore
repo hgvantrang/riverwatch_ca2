@@ -1,0 +1,14 @@
+﻿__pycache__/
+*.pyc
+tmp/
+.env
+.env.*
+BDAIB_CA2.pdf
+output/
+build_report.py
+package_submission.py
+revise_points.py
+sheet_snapshot.csv
+live_verification.json
+task4_word_count.txt
+test_sheet.mjs
