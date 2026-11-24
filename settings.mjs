@@ -1,5 +1,7 @@
 ﻿export const defaultSheetUrl = 'https://docs.google.com/spreadsheets/d/1ho0Vvv0qW75qonW0lAdTS8cbU-vRTdEDUZXTOKbmABQ/export?format=csv&gid=0';
 
+export const groqWorkerUrl = '';
+
 export function sheetCsvUrl(value) {
     const url = new URL(value);
     if (url.protocol !== 'https:' || url.hostname !== 'docs.google.com') {
