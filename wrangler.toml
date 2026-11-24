@@ -1,0 +1,4 @@
+name = "riverwatch-groq"
+main = "groq-worker.mjs"
+compatibility_date = "2026-11-24"
+
