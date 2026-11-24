@@ -101,11 +101,6 @@ export function initialiseDashboard(data) {
         element('fit-map').disabled = true;
     }
     showTown(selected);
-    element('settings-open').onclick = () => {
-        element('settings').open = true;
-        element('connections').scrollIntoView({behavior:'smooth',block:'center'});
-        element('sheet').focus({preventScroll:true});
-    };
     element('refresh').onclick = () => {
         element('question').value = "What is tonight's plan?";
         element('ask').click();
