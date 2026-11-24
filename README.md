@@ -1,4 +1,4 @@
-﻿# River Watch CA2
+# River Watch CA2
 
 Live site: https://hgvantrang.github.io/riverwatch_ca2/
 
@@ -46,7 +46,7 @@ Exact GloFAS river-cell identity still requires independent mapped verification.
 
 ## Files and attribution
 
-- index.html, app.mjs, engine.mjs, answers.mjs and settings.mjs implement the static site.
+- index.html, styles.css, dashboard.mjs, app.mjs, engine.mjs, answers.mjs and settings.mjs implement the static site.
 - history_summary.json stores thresholds, counts, coordinates and provenance.
 - river_points.json and candidate_cells.json document station anchors and screening.
 - data/ retains downloaded public model histories, including the original candidate files for comparison.
@@ -63,3 +63,9 @@ Warning schema, FIPS mapping and attribution terms: https://www.met.ie/Open_Data
 OpenAI model and pricing: https://developers.openai.com/api/docs/models/gpt-4.1-mini
 
 No API key is included. Task 5 must be written independently by the student under the assessment instructions.
+
+## Map interface
+
+The dashboard uses Leaflet 1.9.4 and OpenStreetMap tiles, with attribution on the map. Markers use OPW station locations and show the calculated town recommendation. Town details remain available through the list when the map library is unavailable. Counts and map colours reset while a new question reads sources. No inundation extent is calculated.
+
+Run `node test_dashboard.mjs` for the DOM contract and stale-data reset checks. This is not a real-browser visual test.
