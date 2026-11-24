@@ -3,6 +3,9 @@ __pycache__/
 tmp/
 .env
 .env.*
+.dev.vars
+.dev.vars.*
+.wrangler/
 BDAIB_CA2.pdf
 output/
 build_report.py

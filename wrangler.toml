@@ -4,4 +4,5 @@ compatibility_date = "2026-11-24"
 
 [vars]
 ALLOWED_ORIGIN = "https://hgvantrang.github.io"
+GROQ_MODEL = "openai/gpt-oss-120b"
 
