@@ -42,7 +42,7 @@ The stored history covers 2016-01-01 to 2025-12-31. Percentiles use inclusive li
 
 Automated boundary, capacity, Mallow travel restriction, Bandon barrier availability, Roscommon warning and override checks passed. JavaScript and Python agreed on the captured live baseline and local rehearsal. Ennis has the highest provisional event count, 17, with 7 in the first four winters and 9 in the last four.
 
-Exact GloFAS river-cell identity still requires independent mapped verification. OPW stations anchor town locations and nearby flows support candidate selection, but model cells are not observed gauges. Browser screenshots, an actual Sheet-edit rehearsal and a successful LLM request remain unverified. The configured gpt-4.1-mini model is labelled deprecated on its documentation page and needs an availability check. Free-text operational notes beyond the implemented restrictions need human interpretation. The project is an assessment prototype with these explicit limits.
+Exact GloFAS river-cell identity still requires independent mapped verification. OPW stations anchor town locations and nearby flows support candidate selection, but model cells are not observed gauges. The five required questions were exercised through the application handler with live sources: four real Groq responses and one local scope referral. Browser screenshots and an actual Sheet-edit rehearsal remain outstanding. Free-text operational notes beyond the implemented restrictions need human interpretation. The project is an assessment prototype with these explicit limits.
 
 ## Files and attribution
 
@@ -60,7 +60,7 @@ Official warnings: https://www.met.ie/Open_Data/json/warning_IRELAND.json
 
 Warning schema, FIPS mapping and attribution terms: https://www.met.ie/Open_Data/Warnings/Met_Eireann_Warning_description_June2020.pdf
 
-OpenAI model and pricing: https://developers.openai.com/api/docs/models/gpt-4.1-mini
+Groq model and pricing: https://console.groq.com/docs/models
 
 No API key is included. Task 5 must be written independently by the student under the assessment instructions.
 
@@ -70,6 +70,8 @@ The dashboard serves Leaflet 1.9.4 from vendor/leaflet and uses OpenStreetMap ti
 
 Run `node test_dashboard.mjs` for the DOM contract and stale-data reset checks. This is not a real-browser visual test.
 
-The page automatically retrieves its initial plan without sending an LLM request. The site is static GitHub Pages, so it cannot safely store a provider key. Met Éireann and Open-Meteo do not provide browser CORS headers, so the dashboard reads them through the Cloudflare Worker routes `/api/warnings` and `/api/flood`. Deploy the Worker from this repository with `npx wrangler login`, then `npx wrangler deploy`, then `npx wrangler secret put GROQ_API_KEY` and enter the key at Wrangler's prompt. Cloudflare keeps it as a Worker secret; the same Worker serves the CORS-enabled data proxy. The configured URL is `https://riverwatch-groq.hgvantrang.workers.dev`, based on the account subdomain used by the reference site. If Cloudflare assigns another URL, change `groqWorkerUrl` in `settings.mjs` and publish that change to GitHub. The Worker accepts browser requests only from the GitHub Pages origin and uses Groq's OpenAI-compatible chat completions API with `llama-3.3-70b-versatile` by default.
+The page automatically retrieves its initial plan without an LLM request. Each manual question reads live sources again and shows the AI answer directly. Official warning/forecast endpoints are tried first; Worker routes `/api/warnings` and `/api/flood` provide CORS-enabled fallbacks. Full source evidence stays in the page; only compact calculated evidence goes to the model. HTTP 429 is shown as a rate-limit message with a retry delay.
+
+The Cloudflare Worker uses `openai/gpt-oss-120b` on Groq. Deploy with `npx wrangler login`, `npx wrangler deploy`, then `npx wrangler secret put GROQ_API_KEY` (enter the key at the hidden prompt). Never put a key in files or Git. The deployed URL is `https://riverwatch-groq.hgvantrang.workers.dev`. Production browser calls are allowed only from `https://hgvantrang.github.io`; local previews can test calculations, but AI calls require a separately configured development Worker origin. The account tier, billing cap and remaining quota must be checked by the account owner.
 
 The page automatically retrieves its initial plan without sending an LLM request. Startup errors appear above the overview. Run `node test_startup.mjs` for a complete application startup test against live sources with a lightweight DOM harness; real-browser verification remains separate.

@@ -22,7 +22,7 @@ $('ask').onclick=async(event)=>{
  $('ask').disabled=true;setBusy(true);resetDashboard();$('answer').textContent='';$('evidence').textContent='';
  try{
   const question=$('question').value.trim();if(!question)throw Error('Enter a question.');
-  if(/\b(house|home|insurance|coastal|tidal|road closure)\b/i.test(question)){$('answer').textContent='This tool cannot assess individual homes, coastal or tidal flooding, road closures or insurance. Contact the council area office.';return;}
+  if(/\b(house|home|insurance|coastal|tidal|road closure)\b/i.test(question)){$('answer').textContent='This tool cannot assess individual homes, coastal or tidal flooding, road closures or insurance. Contact the council area office.';$('status').textContent='Out-of-scope question: referred to the council area office. No AI request sent.';return;}
   const sheet=sheetCsvUrl($('sheet').value.trim());if(!/^https:\/\/docs.google.com\/spreadsheets\//.test(sheet))throw Error('Set a published Google Sheet CSV URL.');
   $('status').textContent='Reading Sheet, river forecasts and official warnings…';
   const dateParts=Object.fromEntries(new Intl.DateTimeFormat('en-IE',{timeZone:'Europe/Dublin',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(p=>[p.type,p.value]));const today=`${dateParts.year}-${dateParts.month}-${dateParts.day}`;const end=new Date(today+'T12:00:00Z');end.setUTCDate(end.getUTCDate()+2);
@@ -48,6 +48,7 @@ $('ask').onclick=async(event)=>{
         signal: AbortSignal.timeout(30000),
         body: JSON.stringify({question, evidence})
       });
+      if (response.status === 429) throw Error('AI rate limit: wait ' + (response.headers.get('Retry-After') || '60') + ' seconds before asking again');
       if (!response.ok) throw Error('HTTP ' + response.status);
       const data = await response.json();
       if (typeof data.answer !== 'string' || !data.answer.trim()) throw Error('Empty AI response');
