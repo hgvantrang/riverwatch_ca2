@@ -1,4 +1,4 @@
-﻿__pycache__/
+__pycache__/
 *.pyc
 tmp/
 .env
@@ -12,3 +12,4 @@ sheet_snapshot.csv
 live_verification.json
 task4_word_count.txt
 test_sheet.mjs
+submit/
