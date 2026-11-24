@@ -1,6 +1,6 @@
 const status = document.getElementById('status');
 try {
-    await import('./app.mjs?v=20261124f');
+    await import('./app.mjs?v=20261124-data-fix');
 } catch (error) {
     status.textContent = 'River Watch could not start: ' + error.message + '. Reload the page to retry.';
     status.style.color = '#a52d2d';

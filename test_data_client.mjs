@@ -1,0 +1,13 @@
+﻿import assert from 'node:assert/strict';
+import {readLiveJson} from './data-client.mjs';
+let calls=[];
+globalThis.fetch=async url=>{calls.push(String(url));return new Response('{"ok":true}');};
+assert.deepEqual(await readLiveJson('https://source.example/data','https://backup.example/data'),{ok:true});
+assert.equal(calls.length,1);
+calls=[];
+globalThis.fetch=async url=>{calls.push(String(url));if(calls.length===1)throw new TypeError('Failed to fetch');return new Response('[]');};
+assert.deepEqual(await readLiveJson('https://source.example/data','https://backup.example/data'),[]);
+assert.equal(calls.length,2);
+globalThis.fetch=async()=>new Response('denied',{status:403});
+await assert.rejects(readLiveJson('https://source.example/data','https://backup.example/data'),/Source unavailable.*backup unavailable/);
+console.log('PASS direct source, CORS/network fallback and explicit total outage.');

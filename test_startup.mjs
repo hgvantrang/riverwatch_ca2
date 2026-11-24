@@ -1,4 +1,4 @@
-﻿import assert from 'node:assert/strict';
+import assert from 'node:assert/strict';
 import fs from 'node:fs';
 class Element {
  constructor(){this.children=[];this.textContent='';this.attributes={};this.disabled=false;this.style={};this.value='';}
@@ -19,6 +19,7 @@ const networkFetch=globalThis.fetch;
 globalThis.fetch=async(url,options)=>{
  if(url==='history_summary.json') return new Response(fs.readFileSync(new URL('./history_summary.json',import.meta.url),'utf8'));
  console.log('Fetching',String(url).split('?')[0]);
+ if (String(url).includes('workers.dev') && options?.method === 'POST') return new Response('blocked', {status:403});
  return networkFetch(url,options);
 };
 await import('./app.mjs');
@@ -29,3 +30,9 @@ assert.equal(['normal','standby','barriers'].reduce((sum,k)=>sum+Number(elements
 assert.equal(elements.get('ask').disabled,false);
 assert(JSON.parse(elements.get('evidence').textContent).forecastSources.length===8);
 console.log('PASS full application startup with live Sheet, warnings and eight forecasts; map fallback and counts.');
+
+await elements.get('ask').onclick({type:'click'});
+assert.match(elements.get('status').textContent,/AI explanation unavailable/);
+assert.equal(JSON.parse(elements.get('evidence').textContent).plan.length,8);
+assert(elements.get('answer').textContent.includes('Clonmel'));
+console.log('PASS AI failure preserves the calculated plan and evidence.');
